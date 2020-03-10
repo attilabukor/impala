@@ -170,6 +170,10 @@ public class KuduUtil {
         checkCorrectType(literal.isSetInt_literal(), type, colName, literal);
         key.addLong(pos, literal.getInt_literal().getValue());
         break;
+      case VARCHAR:
+        checkCorrectType(literal.isSetString_literal(), type, colName, literal);
+        key.addVarchar(pos, literal.getString_literal().getValue());
+        break;
       case STRING:
         checkCorrectType(literal.isSetString_literal(), type, colName, literal);
         key.addString(pos, literal.getString_literal().getValue());
@@ -236,9 +240,6 @@ public class KuduUtil {
       case UNIXTIME_MICROS:
         checkCorrectType(literal.isSetInt_literal(), type, colName, literal);
         return literal.getInt_literal().getValue();
-      case DATE:
-        checkCorrectType(literal.isSetDate_literal(), type, colName, literal);
-        return literal.getDate_literal().getDays_since_epoch();
       case DECIMAL:
         checkCorrectType(literal.isSetDecimal_literal(), type, colName, literal);
         BigInteger unscaledVal = new BigInteger(literal.getDecimal_literal().getValue());
@@ -439,13 +440,13 @@ public class KuduUtil {
       case TIMESTAMP: return org.apache.kudu.Type.UNIXTIME_MICROS;
       case DECIMAL: return org.apache.kudu.Type.DECIMAL;
       case DATE: return org.apache.kudu.Type.DATE;
+      case VARCHAR: return org.apache.kudu.Type.VARCHAR;
       /* Fall through below */
       case INVALID_TYPE:
       case NULL_TYPE:
       case BINARY:
       case DATETIME:
       case CHAR:
-      case VARCHAR:
       default:
         throw new ImpalaRuntimeException(format(
             "Type %s is not supported in Kudu", s.toSql()));
@@ -468,6 +469,7 @@ public class KuduUtil {
       case DECIMAL:
         return ScalarType.createDecimalType(
             typeAttributes.getPrecision(), typeAttributes.getScale());
+      case VARCHAR: return ScalarType.createVarcharType(typeAttributes.getLength());
       default:
         throw new ImpalaRuntimeException(String.format(
             "Kudu type '%s' is not supported in Impala", t.getName()));
